@@ -1,130 +1,12 @@
 proxies:
-- name: 免费01-72.9MB-77ms
-  type: vless
-  server: 169.40.42.202
-  port: 443
-  uuid: d65cc14c-f53f-4fe2-b262-97856601319c
-  udp: true
-  tls: true
-  skip-cert-verify: true
-  client-fingerprint: chrome
-  servername: yahoo.com
-  reality-opts:
-    public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
-    short-id: c39cc7310a
-  flow: xtls-rprx-vision
-- name: 免费02-68.9MB-63ms
-  type: vless
-  server: 169.40.42.229
-  port: 443
-  uuid: d65cc14c-f53f-4fe2-b262-97856601319c
-  udp: true
-  tls: true
-  skip-cert-verify: true
-  client-fingerprint: chrome
-  servername: yahoo.com
-  reality-opts:
-    public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
-    short-id: c39cc7310a
-  flow: xtls-rprx-vision
-- name: 免费03-60.8MB-98ms
-  type: trojan
-  server: 169.197.140.214
-  port: 443
-  password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
-  udp: true
-  skip-cert-verify: true
-  sni: courses.discoverfreshgraduatejobsstartyourprofessionaljourney.com
-- name: 免费04-54.7MB-67ms
-  type: ss
-  server: 185.215.132.9
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费05-52.9MB-51ms
-  type: ss
-  server: 172.111.38.72
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费06-51.6MB-38ms
-  type: ss
-  server: 149.40.57.135
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费07-51.2MB-62ms
-  type: ss
-  server: 216.106.178.169
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费08-46.0MB-62ms
-  type: ss
-  server: 67.220.73.178
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费09-44.4MB-101ms
-  type: vmess
-  server: 162.251.62.35
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  udp: true
-  tls: true
-  skip-cert-verify: true
-  servername: xmfhlpy.com
-- name: 免费10-42.5MB-66ms
-  type: ss
-  server: 66.163.125.120
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费11-42.5MB-79ms
-  type: ss
-  server: 167.88.62.203
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费12-42.2MB-98ms
-  type: trojan
-  server: 170.101.101.211
-  port: 443
-  password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
-  udp: true
-  skip-cert-verify: true
-  sni: api.explorecreativejobsandenhanceyourcareerportfolio.com
-- name: 免费13-41.9MB-43ms
+- name: 免费01-US-48M-3ms-GTA
   type: ss
   server: 149.40.57.133
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 免费14-40.9MB-63ms
-  type: ss
-  server: 169.197.140.247
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费15-40.9MB-68ms
-  type: ss
-  server: 167.17.67.171
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费16-38.7MB-106ms
+- name: 免费02-US-35M-20ms-GTA
   type: vmess
   server: 38.22.17.251
   port: 1270
@@ -135,18 +17,7 @@ proxies:
   tls: true
   skip-cert-verify: true
   servername: xmfhlpy.com
-- name: 免费17-35.7MB-96ms
-  type: vmess
-  server: 38.91.107.188
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  udp: true
-  tls: true
-  skip-cert-verify: true
-  servername: xmfhlpy.com
-- name: 免费18-34.5MB-106ms
+- name: 免费03-US-41M-21ms-GTA
   type: vmess
   server: 38.22.17.64
   port: 1270
@@ -157,98 +28,205 @@ proxies:
   tls: true
   skip-cert-verify: true
   servername: xmfhlpy.com
-- name: 免费19-33.4MB-41ms
-  type: vmess
-  server: 38.91.100.16
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  udp: true
-  tls: true
-  skip-cert-verify: true
-  servername: xmfhlpy.com
-- name: 免费20-30.9MB-68ms
-  type: ss
-  server: 38.121.43.225
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费21-28.8MB-68ms
-  type: ss
-  server: 158.51.121.221
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费22-24.9MB-31ms
-  type: ss
-  server: 38.91.100.39
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费23-23.5MB-103ms
+- name: 免费04-US-30M-41ms-GTA
   type: trojan
-  server: 170.101.101.237
+  server: 170.101.101.211
   port: 443
   password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
   udp: true
   skip-cert-verify: true
-  sni: cdn.explorecreativejobsandenhanceyourcareerportfolio.com
-- name: 免费24-22.4MB-52ms
-  type: ss
-  server: 149.40.57.134
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 免费25-20.0MB-93ms
+  sni: api.explorecreativejobsandenhanceyourcareerportfolio.com
+- name: 免费05-US-52M-21ms-GTA
   type: trojan
-  server: 66.163.122.26
-  port: 443
-  password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
+  server: 66.23.203.21
+  port: 59689
+  password: ae7eb4dwyaz25pxwgq59
   udp: true
   skip-cert-verify: true
-  sni: blog.searchnationwidecareerchangehelperandguidancetoday.com
-- name: 免费26-11.5MB-76ms
-  type: vmess
-  server: 38.128.66.249
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
+  sni: 66.23.203.21
+- name: 免费06-US-31M-40ms-GTA
+  type: vless
+  server: 166.88.142.30
+  port: 443
+  uuid: 8197b9b9-8945-460f-99c9-325ef8a8a7c3
   udp: true
   tls: true
   skip-cert-verify: true
-  servername: xmfhlpy.com
-- name: 免费27-8.6MB-30ms
+  client-fingerprint: chrome
+  servername: us4.gofizz.in
+  reality-opts:
+    public-key: gCsalN0QrbmG5RWlegbat3OD44OoUVtrXV2dKW8vcTk
+    short-id: 90ef733c23
+  flow: xtls-rprx-vision
+- name: 免费07-CA-33M-43ms-GTA
+  type: ss
+  server: 137.184.174.93
+  port: 8080
+  cipher: rc4-md5
+  password: 14fFPrbezE3HDZzsMOr6
+  udp: true
+- name: 免费08-US-21M-61ms-GTA
+  type: vless
+  server: 104.168.109.213
+  port: 443
+  uuid: 74b86103-0a6e-4a0e-8430-2aa84af805fc
+  udp: true
+  tls: true
+  skip-cert-verify: true
+  client-fingerprint: chrome
+  servername: www.cloudflare.com
+  reality-opts:
+    public-key: rU4-ii54LkmEWBaliTQHvi3jc0fDTlSmutVtzedMNRM
+    short-id: 6ba7b8
+  flow: xtls-rprx-vision
+- name: 免费09-FR-16M-92ms-GTA
+  type: vless
+  server: 138.124.70.41
+  port: 14430
+  uuid: 6cc745e3-4eb9-46c8-a4a1-85dee7b87edc
+  udp: true
+  network: ws
+  ws-opts:
+    path: /vless
+    headers:
+      Host: 138.124.70.41
+- name: 免费10-RU-15M-98ms-GTA
+  type: vless
+  server: 147.45.47.101
+  port: 8443
+  uuid: 27f26dee-9cf1-4cca-93f8-9ac23d311408
+  udp: true
+  tls: true
+  skip-cert-verify: true
+  client-fingerprint: chrome
+  servername: apple.com
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+    short-id: 6ba85179e30d4fc2
+  flow: xtls-rprx-vision
+- name: 免费11-NL-15M-104ms-GTA
+  type: hysteria2
+  server: 130.49.161.70
+  port: 443
+  password: p7Q76LzlnS4hIzr1W3staBOnUe_WwSkR
+  skip-cert-verify: true
+  sni: hy2.aspidnet.xyz
+  obfs: salamander
+  obfs-password: rG07s3COMIEvdnQipRyWzx_H_2xygNC3
+- name: 免费12-US-14M-25ms-GTA
+  type: vless
+  server: 45.138.100.248
+  port: 14430
+  uuid: ae908ff5-f749-402c-af25-e6e9aef4d6bb
+  udp: true
+  network: ws
+  ws-opts:
+    path: /vless
+    headers:
+      Host: 45.138.100.248
+- name: 免费13-NL-14M-95ms-GTA
+  type: vless
+  server: 146.19.254.171
+  port: 8443
+  uuid: 24fb9b5b-43b7-4058-a7e5-a0499ada1fda
+  udp: true
+  tls: true
+  skip-cert-verify: true
+  client-fingerprint: firefox
+  servername: 146.19.254.171
+  flow: xtls-rprx-vision
+- name: 免费14-NL-13M-97ms-GTA
+  type: vless
+  server: 177.177.215.45
+  port: 444
+  uuid: 254f28cb-d0c1-41e9-a06b-f2155213ff04
+  udp: true
+  tls: true
+  skip-cert-verify: true
+  client-fingerprint: chrome
+  servername: ams2.shtil.io
+  flow: xtls-rprx-vision
+- name: 免费15-DE-12M-103ms-GTA
+  type: vless
+  server: 91.107.247.173
+  port: 2083
+  uuid: 0386df1b-7abd-4676-f3c6-d65d691023b9
+  udp: true
+  tls: true
+  skip-cert-verify: true
+  client-fingerprint: chrome
+  servername: sino.bestsellers1.site
+  network: ws
+  ws-opts:
+    path: /
+    headers: {}
+- name: 免费16-US-10M-29ms-GTA
   type: ss
   server: 15.204.246.111
   port: 5498
   cipher: aes-256-gcm
   password: lGqs95QkFHo2NV
   udp: true
-- name: 免费28-8.0MB-37ms
+- name: 免费17-CA-9M-29ms-GTA
   type: ss
-  server: 15.204.247.206
-  port: 4444
+  server: 51.222.12.127
+  port: 445
   cipher: aes-256-gcm
-  password: pKEW8JPByTVTLtM
+  password: zDNVedRFPQexG9v
   udp: true
-- name: 免费29-5.1MB-95ms
-  type: trojan
-  server: 169.197.140.245
-  port: 443
-  password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
-  udp: true
+- name: 免费18-GB-9M-104ms-GTA
+  type: hysteria2
+  server: 195.63.128.21
+  port: 10444
+  password: fa937345-6d3e-4ff4-8127-1a836987a0db
   skip-cert-verify: true
-  sni: www.discoverfreshgraduatejobsstartyourprofessionaljourney.com
-- name: 免费30-0.9MB-83ms
+  sni: germany.cloudhouse1.ru
+- name: 免费19-CA-8M-29ms-GTA
   type: ss
-  server: 38.22.17.129
-  port: 19999
+  server: 51.79.49.116
+  port: 8882
   cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  password: kDWvXYZoTBcGkC4
+  udp: true
+- name: 免费20-XX-8M-105ms-G
+  type: ss
+  server: 67.159.56.79
+  port: 8388
+  cipher: chacha20-ietf-poly1305
+  password: ~4HT,}bC@heiRai
+  udp: true
+- name: 免费21-ES-5M-84ms-GTA
+  type: ss
+  server: 5.188.181.201
+  port: 9029
+  cipher: aes-256-cfb
+  password: dU3DSNS8wYPXzEKw
+  udp: true
+- name: 免费22-NL-4M-110ms-GTA
+  type: ss
+  server: 82.38.31.62
+  port: 8080
+  cipher: chacha20-ietf-poly1305
+  password: oZIoA69Q8yhcQV8ka3Pa3A
+  udp: true
+- name: 免费23-ES-4M-86ms-GTA
+  type: ss
+  server: 5.188.181.201
+  port: 9027
+  cipher: aes-256-cfb
+  password: EXN3S3eQpjE7EJu8
+  udp: true
+- name: 免费24-DE-3M-108ms-GTA
+  type: vless
+  server: 159.195.207.238
+  port: 49313
+  uuid: 855c7aaa-e7d6-463e-971e-d36032744428
+  udp: true
+- name: 免费25-US-3M-88ms-GTA
+  type: vmess
+  server: 129.146.143.80
+  port: 48111
+  uuid: d4603cc2-e0ee-4651-83f5-1db5b7168177
+  alterId: 0
+  cipher: auto
   udp: true
