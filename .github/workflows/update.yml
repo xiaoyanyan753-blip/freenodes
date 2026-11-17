@@ -1,0 +1,41 @@
+name: update
+on:
+  schedule:
+    # 以下为 UTC 时间，北京时间 = UTC+8
+    - cron: '0 12-16 * * *'   # 北京 20:00-24:00 每小时
+    - cron: '0 18,0,6 * * *'  # 北京 02:00、08:00、14:00
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: update
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pyyaml
+      - name: 下载 mihomo
+        run: |
+          URL=$(curl -s -H "Authorization: Bearer ${{ github.token }}" https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep browser_download_url | grep linux-amd64-compatible | grep '\.gz"' | grep -v go | head -1 | cut -d'"' -f4)
+          echo "$URL"
+          curl -sL "$URL" | gunzip > mihomo
+          chmod +x mihomo
+          ./mihomo -v
+      - name: 抓取并测速
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT: ${{ secrets.TG_CHAT }}
+        run: python collect.py
+      - name: 提交结果
+        run: |
+          git config user.name "bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add free.yaml report.md
+          git diff --cached --quiet || git commit -m "update $(date -u +%F-%H%M)"
+          git push
