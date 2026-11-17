@@ -1,0 +1,12 @@
+# 一行一个订阅地址，# 开头是注释。失效的来源只会在报告里显示"失败"，不影响其他来源。
+# 下面是我凭记忆列的公开聚合项目，没有逐个验证，可能有的已失效；请随时增删。
+
+# --- 开源聚合项目 ---
+https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt
+https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt
+https://raw.githubusercontent.com/barry-far/V2ray-Config/main/All_Configs_Sub.txt
+https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub
+https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt
+https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2
+
+# --- 机场试用/福利订阅、博主公开订阅：把你找到的地址加在下面 ---
