@@ -112,15 +112,33 @@ def fetch_pool():
 
 
 # ---------------- 内核：每个候选节点一个独立监听端口，可并行实测 ----------------
+def wan_iface():
+    """物理出口网卡（你的是 ppp0）。核心的所有外发连接绑定到它，绕开 Merlin Clash 对路由器本机流量的接管。"""
+    if os.getenv("FN_IFACE"):
+        return os.getenv("FN_IFACE")
+    try:
+        v = sh(["nvram", "get", "wan0_gw_ifname"]).stdout.strip()
+        if v:
+            return v
+        m = re.search(r"default via \S+ dev (\S+)", sh(["ip", "route"]).stdout)
+        return m.group(1) if m else None
+    except Exception:
+        return None
+
+
 def start_core(items):
     core = next((c for c in CORE_CANDS if os.path.exists(c)), None)
     if not core:
         raise SystemExit("找不到 clash 内核（/koolshare/bin/clash）")
     os.makedirs(WORK, exist_ok=True)
+    WAN = wan_iface()
+    log("外发网卡绑定：%s" % (WAN or "未指定"))
     for _ in range(60):
         for i, it in enumerate(items):
             it["p"]["name"] = "n%d" % i
         cfg = {"external-controller": CTRL, "log-level": "info", "mode": "rule", "ipv6": False,
+               "routing-mark": 256,          # 0x100：Merlin Clash 的防火墙规则对带这个标记的连接直接放行
+               **({"interface-name": WAN} if WAN else {}),
                "dns": {"enable": True, "nameserver": ["223.5.5.5", "119.29.29.29"],
                        "default-nameserver": ["223.5.5.5", "119.29.29.29"]},
                "proxies": [it["p"] for it in items],
@@ -173,7 +191,7 @@ def selftest():
         raise SystemExit("自检失败：内核的监听端口不通。可能内核版本不支持 listeners，请把 `/koolshare/bin/clash -v` 的输出发给我")
     if loc != "CN":
         raise SystemExit("自检失败：路由器自己的直连出口显示在 %s，不是大陆。说明路由器本机流量被代理接管，"
-                         "此时实测结果不代表苏州线路，已停止。" % loc)
+                         "此时实测结果不代表苏州线路，已停止。请把日志发给我。" % loc)
     log("自检通过：直连出口 CN，监听功能正常")
 
 
