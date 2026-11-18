@@ -1,1 +1,5 @@
+# 一行一个订阅地址，# 开头是注释。失效的来源只会在 report.md 里标 ❌，不影响其他来源。
+# 标"未验证"的是我根据项目说明写的，没有逐个确认文件存在，失效会自动跳过。
+
+# --- 机场试用/福利订阅、博主公开订阅：把你找到的地址加在下面，一行一个 ---
 https://e16phnmvbq6hdmd.eduk.cc.cd/s/eyJ1IjoieGlhb3lhbnlhbiIsImUiOjE3ODU0ODY0NDA5ODgsInMiOiJmNzhiNTM0NmJjNjg3ZDRkIn0
