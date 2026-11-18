@@ -1,44 +1,35 @@
-# 更新报告
+# 候选池报告
 
-北京时间: 2026-11-18 08:43
+北京时间: 2026-11-18 10:01
 
-候选 4000（上次入选 28）→ 延迟合格 391 → 进入测速 60 → 测速/连通合格 33 → 去重后保留 20
-淘汰原因：速度不足 27
+候选 4500（上次池 0）→ 存活 1661 → 入池 209
+各国入池数量：SG 25，JP 30，TW 20，US 40，HK 20，GB 12，DE 12，WILD 50
+
+> 这里只做存活检测和国家归类。可用性、速度、AI/YouTube/GitHub 连通都由路由器在苏州线路上实测。
 
 ## 来源
-- peasoft/NoMoreWalls：解析 382，新增 359 
-- mahdibland/V2RayAggregator：解析 4302，新增 3964 
-- barry-far/V2ray-Config：解析 8018，新增 3188 
-- Pawdroid/Free-servers：解析 14，新增 4 
-- ermaozi/get_subscribe：解析 461，新增 51 
-- Epodonios/v2ray-configs：解析 0，新增 0 ❌HTTP Error 404: Not Found
-- chengaopan/AutoMergePublicNodes：解析 398，新增 13 
-- ripaojiedian/freenode：解析 12，新增 0 
-- MatinGhanbari/v2ray-configs：解析 3836，新增 1522 
-
-## 入选节点
-
-| # | 国家 | 速度MB/s | 延迟ms | 连续合格 | 标记 | 协议 |
-|---|---|---|---|---|---|---|
-| 1 | US | 40.1 | 40 | 3 | GTA | vless |
-| 2 | US | 34.8 | 44 | 3 | GTA | ss |
-| 3 | US | 32.7 | 51 | 3 | GTA | trojan |
-| 4 | US | 29.2 | 60 | 3 | GTA | ss |
-| 5 | US | 48.5 | 39 | 2 | GTA | ss |
-| 6 | US | 27.1 | 59 | 3 | GTA | vmess |
-| 7 | US | 26.6 | 60 | 3 | GTA | vmess |
-| 8 | US | 28.5 | 50 | 2 | GTA | ss |
-| 9 | US | 21.7 | 65 | 2 | GTA | ss |
-| 10 | US | 19.9 | 65 | 3 | GTA | vless |
-| 11 | CA | 18.8 | 84 | 3 | GTA | ss |
-| 12 | US | 19.9 | 70 | 1 | GTA | vless |
-| 13 | US | 19.0 | 12 | 1 | GTA | vless |
-| 14 | DE | 14.0 | 148 | 2 | GTA | hysteria2 |
-| 15 | DE | 12.7 | 155 | 3 | GTA | hysteria2 |
-| 16 | NL | 10.1 | 144 | 3 | GTA | hysteria2 |
-| 17 | FR | 9.9 | 150 | 3 | GTA | vless |
-| 18 | CA | 7.8 | 67 | 3 | GTA | ss |
-| 19 | GB | 6.9 | 156 | 3 | GTA | ss |
-| 20 | CA | 6.5 | 69 | 3 | GTA | ss |
-
-标记：G=Google可达 T=Telegram可达 A=OpenAI接口可达。连续合格=已连续多少次更新都存活。
+- peasoft/NoMoreWalls:list.txt：解析 382，新增 368 
+- mahdibland/V2RayAggregator:sub_merge.txt：解析 4302，新增 3968 
+- barry-far/V2ray-Config:All_Configs_Sub.txt：解析 8018，新增 3201 
+- ermaozi/get_subscribe:v2ray.txt：解析 461，新增 53 
+- chengaopan/AutoMergePublicNodes:list.txt：解析 389，新增 11 
+- MatinGhanbari/v2ray-configs:all_sub.txt：解析 3836，新增 1523 
+- Delta-Kronecker/V2ray-Config:sg.txt：解析 122，新增 84 
+- Delta-Kronecker/V2ray-Config:jp.txt：解析 99，新增 71 
+- Delta-Kronecker/V2ray-Config:tw.txt：解析 82，新增 71 
+- Delta-Kronecker/V2ray-Config:hk.txt：解析 63，新增 46 
+- Delta-Kronecker/V2ray-Config:us.txt：解析 527，新增 169 
+- Delta-Kronecker/V2ray-Config:gb.txt：解析 291，新增 257 
+- Delta-Kronecker/V2ray-Config:de.txt：解析 216，新增 97 
+- Delta-Kronecker/V2ray-Config:all_configs.txt：解析 2660，新增 698 
+- Au1rxx/free-vpn-subscriptions:v2ray-base64-SG.txt：解析 182，新增 22 
+- Au1rxx/free-vpn-subscriptions:v2ray-base64-JP.txt：解析 145，新增 27 
+- Au1rxx/free-vpn-subscriptions:v2ray-base64-TW.txt：解析 29，新增 3 
+- Au1rxx/free-vpn-subscriptions:v2ray-base64-HK.txt：解析 77，新增 12 
+- Danialsamadi/v2go:SG.txt：解析 23，新增 0 
+- Danialsamadi/v2go:JP.txt：解析 9，新增 0 
+- Danialsamadi/v2go:TW.txt：解析 0，新增 0 ❌HTTP Error 404: Not Found
+- Danialsamadi/v2go:HK.txt：解析 7，新增 1 
+- Danialsamadi/v2go:US.txt：解析 191，新增 4 
+- Danialsamadi/v2go:GB.txt：解析 21，新增 0 
+- Danialsamadi/v2go:DE.txt：解析 44，新增 0 
