@@ -1,5 +1,35 @@
 # 一行一个订阅地址，# 开头是注释。失效的来源只会在 report.md 里标 ❌，不影响其他来源。
 # 标"未验证"的是我根据项目说明写的，没有逐个确认文件存在，失效会自动跳过。
 
-# --- 机场试用/福利订阅、博主公开订阅：把你找到的地址加在下面，一行一个 ---
+# --- 综合聚合项目（已验证能抓到节点） ---
+https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt
+https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt
+https://raw.githubusercontent.com/barry-far/V2ray-Config/main/All_Configs_Sub.txt
+https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt
+https://raw.githubusercontent.com/chengaopan/AutoMergePublicNodes/master/list.txt
+https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/all_sub.txt
 
+# --- 按国家分好的来源：Delta-Kronecker（页面显示用 xray 内核测试过，含新加坡/日本/香港/台湾/美国/英国/德国） ---
+https://github.com/Delta-Kronecker/V2ray-Config/raw/refs/heads/main/config/countries/sg.txt
+https://github.com/Delta-Kronecker/V2ray-Config/raw/refs/heads/main/config/countries/jp.txt
+https://github.com/Delta-Kronecker/V2ray-Config/raw/refs/heads/main/config/countries/tw.txt
+https://github.com/Delta-Kronecker/V2ray-Config/raw/refs/heads/main/config/countries/hk.txt
+https://github.com/Delta-Kronecker/V2ray-Config/raw/refs/heads/main/config/countries/us.txt
+https://github.com/Delta-Kronecker/V2ray-Config/raw/refs/heads/main/config/countries/gb.txt
+https://github.com/Delta-Kronecker/V2ray-Config/raw/refs/heads/main/config/countries/de.txt
+https://github.com/Delta-Kronecker/V2ray-Config/raw/refs/heads/main/config/all_configs.txt
+
+# --- 按国家分好的来源：未验证 ---
+https://raw.githubusercontent.com/Au1rxx/free-vpn-subscriptions/main/output/by-country/v2ray-base64-SG.txt
+https://raw.githubusercontent.com/Au1rxx/free-vpn-subscriptions/main/output/by-country/v2ray-base64-JP.txt
+https://raw.githubusercontent.com/Au1rxx/free-vpn-subscriptions/main/output/by-country/v2ray-base64-TW.txt
+https://raw.githubusercontent.com/Au1rxx/free-vpn-subscriptions/main/output/by-country/v2ray-base64-HK.txt
+https://raw.githubusercontent.com/Danialsamadi/v2go/main/Splitted-By-Country/SG.txt
+https://raw.githubusercontent.com/Danialsamadi/v2go/main/Splitted-By-Country/JP.txt
+https://raw.githubusercontent.com/Danialsamadi/v2go/main/Splitted-By-Country/TW.txt
+https://raw.githubusercontent.com/Danialsamadi/v2go/main/Splitted-By-Country/HK.txt
+https://raw.githubusercontent.com/Danialsamadi/v2go/main/Splitted-By-Country/US.txt
+https://raw.githubusercontent.com/Danialsamadi/v2go/main/Splitted-By-Country/GB.txt
+https://raw.githubusercontent.com/Danialsamadi/v2go/main/Splitted-By-Country/DE.txt
+
+# --- 机场试用/福利订阅、博主公开订阅：把你找到的地址加在下面，一行一个 ---
