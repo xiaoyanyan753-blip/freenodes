@@ -41,7 +41,7 @@ KEEP = int(os.getenv("KEEP", "30"))
 EXTRA_CAP = int(os.getenv("EXTRA_CAP", "6"))      # 凑满 KEEP 时，每个国家在配额之外最多再多留几个
 LAT_MAX = int(os.getenv("LAT_MAX", "2500"))       # 毫秒，三次 HTTPS 请求的平均耗时上限
 THREADS = int(os.getenv("THREADS", "8"))
-MIN_SPEED = float(os.getenv("MIN_SPEED", "1.0"))  # MB/s
+MIN_SPEED = float(os.getenv("MIN_SPEED", "0.5"))  # MB/s（0.3≈2.4Mbps，聊天类 AI 够用；想更严就调高）
 SPEED_CAP, SPEED_TTL, SPEED_PER_CC = 20.0, 6 * 3600, 10
 MAX_NODES = int(os.getenv("MAX_NODES", "2400"))
 BATCH = int(os.getenv("BATCH", "400"))            # 每批同时开多少个节点（内存友好）
@@ -112,6 +112,39 @@ def fetch_pool():
         except Exception:
             pass
     raise SystemExit("拉不到候选池 pool.yaml：先确认 GitHub 那边已经成功运行过一次")
+
+
+def fetch_local():
+    """读取 U 盘上的私有订阅清单 my_sources.txt（只在路由器本地，不进 GitHub）。"""
+    f = BASE + "/my_sources.txt"
+    out = []
+    if not os.path.exists(f):
+        return out
+    sys.path.insert(0, BASE)
+    try:
+        import collect
+    except Exception as e:
+        log("读取私有订阅需要同目录的 collect.py（%s）" % e)
+        return out
+    for line in open(f, encoding="utf-8-sig").read().splitlines():
+        u = line.strip()
+        if not u or u.startswith("#"):
+            continue
+        got = []
+        for px in (None, CLASH_PROXY):
+            cmd = ["curl", "-sSL", "-m", "40", "-A", "clash.meta", u]
+            if px:
+                cmd[1:1] = ["-x", px]
+            try:
+                got = collect.from_text(sh(cmd).stdout)
+            except Exception:
+                got = []
+            if got:
+                break
+        host = u.split("/")[2] if u.count("/") > 2 else "?"
+        log("私有来源 %s：%d 个节点" % (host, len(got)))
+        out += [dict(p, name="MY-%d" % len(out)) for p, _ in got]
+    return out
 
 
 # ---------------- 内核：每个候选节点一个独立监听端口，可并行实测 ----------------
@@ -366,7 +399,8 @@ def run():
     st = load_state()
     now = int(time.time())
     seen, items = set(), []
-    for p in st.get("last", []) + fetch_pool():       # 上次入选的先放前面，必复测
+    local = fetch_local()
+    for p in st.get("last", []) + local + fetch_pool():   # 上次入选的、私有订阅的先放前面
         try:
             p = dict(p)
             p["port"] = int(p["port"])
@@ -381,7 +415,7 @@ def run():
     items = items[:MAX_NODES]
     log("本轮实测 %d 个节点，每批 %d 个" % (len(items), BATCH))
     spd = st.setdefault("speed", {})
-    drops, oks, tested = Counter(), [], []
+    drops, oks, tested, lows = Counter(), [], [], []
     n_pre = n_good = 0
     for b in range(0, len(items), BATCH):
         batch = items[b:b + BATCH]
@@ -415,8 +449,11 @@ def run():
                 else:
                     sp = speed(P0 + it["i"])
                     spd[it["h"]] = [sp, now]
+                log("  %s %s %dms %.2fMB/s %s" % (it["cc"], it["p"]["type"], it["lat"], sp,
+                                                  "AI" if it["ai"] else "非AI"))
                 if sp < MIN_SPEED:
                     drops["速度不足"] += 1
+                    lows.append((it["cc"], it["lat"], sp, it["p"]["type"]))
                     continue
                 it["s"] = sp
                 oks.append(it)
@@ -452,7 +489,12 @@ def run():
              "各国入选：" + "，".join("%s %d" % (NAME[c], cnt[c]) for c, _ in QUOTA)]
     if gaps:
         lines.append("⚠️ 配额缺口：" + "，".join("%s 缺 %d" % (NAME[c], n) for c, n in gaps.items()))
-    if len(final) < 3:
+    if lows:
+        lines += ["", "# 能通但速度未达标(<%.1f MB/s)的节点" % MIN_SPEED] + [
+            "%s  %d ms  %.2f MB/s  %s" % (c, l, sp, t) for c, l, sp, t in sorted(lows, key=lambda x: -x[2])[:15]]
+    os.makedirs(WWW, exist_ok=True)
+    write_if_changed(WWW + "/report.txt", "\n".join(lines) + "\n")
+    if not final or (len(final) < 3 and os.path.exists(WWW + "/free.yaml")):
         log("入选太少，保留上一次的订阅文件。\n" + "\n".join(lines))
         notify("⚠️ 免费节点更新：\n" + "\n".join(lines))
         json.dump(st, open(STATE, "w"))
