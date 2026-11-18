@@ -463,6 +463,64 @@ def run():
         if gaps else ""))
 
 
+# ---------------- 诊断：弄清楚"连不上"到底是节点真的被封，还是测试方法有问题 ----------------
+def tcp_try(p, wan):
+    """从路由器的物理网卡直接 TCP 连一下节点端口（不经过任何代理）。"""
+    try:
+        s = socket.socket()
+        s.settimeout(4)
+        if wan:
+            s.setsockopt(socket.SOL_SOCKET, 25, wan.encode() + b"\0")   # SO_BINDTODEVICE
+        s.connect((str(p["server"]), int(p["port"])))
+        s.close()
+        return "ok"
+    except Exception as e:
+        return re.sub(r"[\d.]{7,}", "x", str(e))[:40]
+
+
+def api_delay(name):
+    import urllib.parse
+    u = "http://%s/proxies/%s/delay?url=http%%3A%%2F%%2Fwww.gstatic.com%%2Fgenerate_204&timeout=6000" % (
+        CTRL, urllib.parse.quote(name))
+    try:
+        json.loads(urllib.request.urlopen(u, timeout=12).read())
+        return "ok"
+    except Exception as e:
+        try:
+            return re.sub(r"[\d.]{7,}", "x", json.loads(e.read().decode()).get("message", str(e)))[:60]
+        except Exception:
+            return re.sub(r"[\d.]{7,}", "x", str(e))[:60]
+
+
+def diag():
+    import random
+    wan = wan_iface()
+    pool = [p for p in fetch_pool() if p.get("type") != "hysteria2"]
+    random.shuffle(pool)
+    pool = pool[:60]
+    items = [{"p": dict(p), "i": i} for i, p in enumerate(pool)]
+    log("诊断 %d 个节点，网卡 %s" % (len(items), wan))
+    with ThreadPoolExecutor(30) as ex:
+        tcp = list(ex.map(lambda it: tcp_try(it["p"], wan), items))
+    proc, items = start_core(items)
+    try:
+        selftest()
+        with ThreadPoolExecutor(THREADS) as ex:
+            api = list(ex.map(lambda it: api_delay(it["p"]["name"]), items))
+    finally:
+        proc.kill()
+    print("\nTCP 直连端口：通 %d / %d" % (sum(1 for x in tcp if x == "ok"), len(tcp)))
+    print("  失败原因：", dict(Counter(x for x in tcp if x != "ok")))
+    print("经内核代理的延迟测试：通 %d / %d" % (sum(1 for x in api if x == "ok"), len(api)))
+    print("  失败原因：", dict(Counter(x for x in api if x != "ok")))
+    by = Counter()
+    for it, t, a in zip(items, tcp, api):
+        by[(it["p"]["type"], t == "ok", a == "ok")] += 1
+    print("按协议 (类型, TCP通, 代理通)：", dict(by))
+    print("\n内核日志末尾：")
+    print("\n".join(open(WORK + "/log.txt", errors="ignore").read().splitlines()[-12:]))
+
+
 # ---------------- 安装 / 服务 ----------------
 def serve():
     os.makedirs(WWW, exist_ok=True)
@@ -529,6 +587,8 @@ def main():
         install()
     elif "--uninstall" in a:
         uninstall()
+    elif "--diag" in a:
+        diag()
     elif "--serve" in a:
         serve()
     elif "--stop" in a:
