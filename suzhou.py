@@ -492,6 +492,18 @@ def api_delay(name):
             return re.sub(r"[\d.]{7,}", "x", str(e))[:60]
 
 
+def cur_dbg(port, url, t=12):
+    """和 cur 一样，但把 curl 的退出码和错误信息也带回来（诊断用）。"""
+    try:
+        r = sh(["curl", "-sS", "-m", str(t), "-x", "http://127.0.0.1:%d" % port, "-o", "/dev/null", "-w",
+                "%{http_code} %{time_total}", url], t=t + 5)
+        code, tm = (r.stdout.strip().split() + ["0", "0"])[:2]
+        err = re.sub(r"\d{2,}", "N", (r.stderr.strip().splitlines() or [""])[-1])[:70]
+        return code, r.returncode, float(tm), err
+    except Exception as e:
+        return "000", -1, 0.0, str(e)[:50]
+
+
 def diag():
     import random
     wan = wan_iface()
@@ -507,6 +519,8 @@ def diag():
         selftest()
         with ThreadPoolExecutor(THREADS) as ex:
             api = list(ex.map(lambda it: api_delay(it["p"]["name"]), items))
+            https = list(ex.map(lambda it: cur_dbg(P0 + it["i"], "https://www.cloudflare.com/cdn-cgi/trace"), items))
+            http_ = list(ex.map(lambda it: cur_dbg(P0 + it["i"], "http://www.gstatic.com/generate_204"), items))
     finally:
         proc.kill()
     print("\nTCP 直连端口：通 %d / %d" % (sum(1 for x in tcp if x == "ok"), len(tcp)))
@@ -517,6 +531,16 @@ def diag():
     for it, t, a in zip(items, tcp, api):
         by[(it["p"]["type"], t == "ok", a == "ok")] += 1
     print("按协议 (类型, TCP通, 代理通)：", dict(by))
+    def summ(name, rs):
+        okc = [r for r in rs if r[0] in ("200", "204")]
+        print("%s：通 %d / %d%s" % (name, len(okc), len(rs), ("，通的平均耗时 %.1fs" % (
+            sum(r[2] for r in okc) / len(okc))) if okc else ""))
+        print("  失败(curl退出码/信息)：", dict(Counter("%s %s" % (r[1], r[3]) for r in rs if r[0] not in ("200", "204"))))
+    print()
+    summ("curl→HTTPS cloudflare", https)
+    summ("curl→HTTP gstatic", http_)
+    print("交叉：(内核延迟测试通, curl-HTTPS通, curl-HTTP通) →", dict(Counter(
+        (a == "ok", h[0] == "200", q[0] == "204") for a, h, q in zip(api, https, http_))))
     print("\n内核日志末尾：")
     print("\n".join(open(WORK + "/log.txt", errors="ignore").read().splitlines()[-12:]))
 
