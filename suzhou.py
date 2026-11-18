@@ -43,7 +43,10 @@ LAT_MAX = int(os.getenv("LAT_MAX", "2500"))       # 毫秒，三次 HTTPS 请求
 THREADS = int(os.getenv("THREADS", "8"))
 MIN_SPEED = float(os.getenv("MIN_SPEED", "1.0"))  # MB/s
 SPEED_CAP, SPEED_TTL, SPEED_PER_CC = 20.0, 6 * 3600, 10
-MAX_NODES = int(os.getenv("MAX_NODES", "260"))
+MAX_NODES = int(os.getenv("MAX_NODES", "2400"))
+BATCH = int(os.getenv("BATCH", "400"))            # 每批同时开多少个节点（内存友好）
+PRE_THREADS = int(os.getenv("PRE_THREADS", "16"))
+SPEED_PER_BATCH = 25                              # 每批最多测速几个
 SCHED_HOURS = {20, 21, 22, 23, 0, 2, 8, 14}       # 北京时间
 
 
@@ -345,6 +348,11 @@ def notify(text):
 
 
 # ---------------- 主流程 ----------------
+def prefilter(it):
+    """严格的初筛：必须真的拿到 204（只返回一个网页的假节点会被挡掉）。"""
+    return cur(P0 + it["i"], "http://www.gstatic.com/generate_204", 5)[0] == "204"
+
+
 def run():
     lock = None
     if fcntl:
@@ -371,51 +379,60 @@ def run():
         cc0 = (str(p.get("name", "")).split("-")[0] or "XX").upper()
         items.append({"p": p, "h": hkey(p), "cc0": cc0, "i": 0})
     items = items[:MAX_NODES]
-    log("本轮实测 %d 个节点" % len(items))
-    for i, it in enumerate(items):
-        it["i"] = i
-    proc, items = start_core(items)
-    for i, it in enumerate(items):
-        it["i"] = i
-    drops, oks = Counter(), []
-    try:
-        selftest()
-        with ThreadPoolExecutor(THREADS) as ex:
-            results = list(ex.map(probe, items))
-        for it, r in zip(items, results):
-            if r["ok"]:
-                it.update(r)
+    log("本轮实测 %d 个节点，每批 %d 个" % (len(items), BATCH))
+    spd = st.setdefault("speed", {})
+    drops, oks, tested = Counter(), [], []
+    n_pre = n_good = 0
+    for b in range(0, len(items), BATCH):
+        batch = items[b:b + BATCH]
+        proc, batch = start_core(batch)
+        for i, it in enumerate(batch):
+            it["i"] = i
+        try:
+            if b == 0:
+                selftest()
+            with ThreadPoolExecutor(PRE_THREADS) as ex:
+                pre = list(ex.map(prefilter, batch))
+            alive = [it for it, ok in zip(batch, pre) if ok]
+            drops["基础不通"] += len(batch) - len(alive)
+            n_pre += len(alive)
+            with ThreadPoolExecutor(THREADS) as ex:
+                res = list(ex.map(probe, alive))
+            good = []
+            for it, r in zip(alive, res):
+                if r["ok"]:
+                    it.update(r)
+                    good.append(it)
+                else:
+                    drops[r["why"]] += 1
+            n_good += len(good)
+            good.sort(key=lambda x: x["lat"])
+            drops["超出测速名额"] += max(0, len(good) - SPEED_PER_BATCH)
+            for it in good[:SPEED_PER_BATCH]:
+                c = spd.get(it["h"])
+                if c and now - c[1] < SPEED_TTL:
+                    sp = c[0]
+                else:
+                    sp = speed(P0 + it["i"])
+                    spd[it["h"]] = [sp, now]
+                if sp < MIN_SPEED:
+                    drops["速度不足"] += 1
+                    continue
+                it["s"] = sp
                 oks.append(it)
-            else:
-                drops[r["why"]] += 1
-        log("基础连通合格 %d / %d；淘汰原因：%s" % (len(oks), len(items), dict(drops)))
-        # 速度：每个国家最多测 SPEED_PER_CC 个延迟最低的，6 小时内测过的直接用缓存
-        spd = st.setdefault("speed", {})
-        todo = []
-        for cc in NAME:
-            todo += sorted([x for x in oks if x["cc"] == cc], key=lambda x: x["lat"])[:SPEED_PER_CC]
-        for it in todo:
-            c = spd.get(it["h"])
-            if c and now - c[1] < SPEED_TTL:
-                it["s"] = c[0]
-            else:
-                it["s"] = speed(P0 + it["i"])
-                spd[it["h"]] = [it["s"], now]
-        oks2 = []
-        for it in oks:
-            if "s" not in it:
-                continue
-            if it["s"] < MIN_SPEED:
-                drops["速度不足"] += 1
-                continue
-            oks2.append(it)
-        oks = oks2
-    finally:
-        proc.kill()
+            log("第 %d 批：%d 个 → 初筛通过 %d → 完整检测合格 %d；累计入围 %d" % (
+                b // BATCH + 1, len(batch), len(alive), len(good), len(oks)))
+        finally:
+            proc.kill()
+            try:
+                proc.wait(5)
+            except Exception:
+                pass
+        tested += batch
 
     hist = st.setdefault("hist", {})
     okh = {it["h"] for it in oks}
-    for it in items:
+    for it in tested:
         if it["h"] in okh:
             hist[it["h"]] = {"n": hist.get(it["h"], {}).get("n", 0) + 1, "t": now}
         else:
@@ -429,8 +446,8 @@ def run():
     bj = time.strftime("%Y-%m-%d %H:%M", time.gmtime(now + 8 * 3600))
     cnt = Counter(x["cc"] for x in final)
     lines = ["苏州线路实测报告  北京时间 " + bj, "",
-             "候选 %d → 基础连通合格 %d → 速度合格 %d → 入选 %d" % (len(items), len(results) - sum(
-                 v for k, v in drops.items() if k != "速度不足"), len(oks), len(final)),
+             "候选 %d → 初筛通过 %d → 完整检测合格 %d → 速度合格 %d → 入选 %d" % (
+                 len(tested), n_pre, n_good, len(oks), len(final)),
              "淘汰原因：" + "，".join("%s %d" % kv for kv in drops.items()),
              "各国入选：" + "，".join("%s %d" % (NAME[c], cnt[c]) for c, _ in QUOTA)]
     if gaps:
@@ -535,7 +552,7 @@ def diag():
         okc = [r for r in rs if r[0] in ("200", "204")]
         print("%s：通 %d / %d%s" % (name, len(okc), len(rs), ("，通的平均耗时 %.1fs" % (
             sum(r[2] for r in okc) / len(okc))) if okc else ""))
-        print("  失败(curl退出码/信息)：", dict(Counter("%s %s" % (r[1], r[3]) for r in rs if r[0] not in ("200", "204"))))
+        print("  失败(curl退出码/信息)：", dict(Counter("状态码%s 退出码%s %s" % (r[0], r[1], r[3]) for r in rs if r[0] not in ("200", "204"))))
     print()
     summ("curl→HTTPS cloudflare", https)
     summ("curl→HTTP gstatic", http_)
