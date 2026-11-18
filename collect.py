@@ -11,10 +11,10 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 import yaml
 
-MAX_CAND = int(os.getenv("MAX_CAND", "4500"))
+MAX_CAND = int(os.getenv("MAX_CAND", "8000"))
 DELAY_MAX = int(os.getenv("DELAY_MAX", "3500"))   # 只是剔除死节点，所以很宽松
-POOL_QUOTA = {"SG": 25, "JP": 30, "TW": 20, "US": 40, "HK": 20, "GB": 12, "DE": 12}
-WILD_MAX = int(os.getenv("WILD_MAX", "50"))       # Cloudflare 前置节点（真实出口国家不明），交给路由器去验证
+POOL_QUOTA = {"SG": 250, "JP": 300, "TW": 150, "US": 400, "HK": 150, "GB": 100, "DE": 100}
+WILD_MAX = int(os.getenv("WILD_MAX", "600"))       # Cloudflare 前置节点（真实出口国家不明），交给路由器去验证
 API, MIXED = "http://127.0.0.1:19090", 17890
 HERE = os.path.dirname(os.path.abspath(__file__))
 T0 = time.time()
@@ -266,7 +266,9 @@ def geo_batch(items):
                 return None
     with ThreadPoolExecutor(32) as ex:
         ips = list(ex.map(res, items))
-    uniq = sorted({x for x in ips if x and ":" not in x})[:2000]
+    uniq = sorted({x for x in ips if x and ":" not in x})
+    if len(uniq) > 3000:
+        uniq = random.sample(uniq, 3000)
     info = {}
     for i in range(0, len(uniq), 100):
         try:
@@ -313,7 +315,7 @@ def build_pool(alive):
         if len(target) >= cap:
             continue
         kc, kn = ("c", cred(p)), ("n", netkey(p["server"]))
-        if cn[kc] >= 2 or cn[kn] >= 3:
+        if cn[kc] >= 3 or cn[kn] >= 6:
             continue
         cn[kc] += 1
         cn[kn] += 1
@@ -395,7 +397,7 @@ def main():
            "", "## 来源"]
     rep += ["- %s：解析 %d，新增 %d %s" % (a, b, c, ("❌" + e) if e else "") for a, b, c, e in stat]
     open(os.path.join(HERE, "report.md"), "w", encoding="utf-8").write("\n".join(rep) + "\n")
-    if len(out) < 20:
+    if len(out) < 40:
         print("入池太少(%d)，保留上一次的 pool.yaml" % len(out))
         return
     with open(os.path.join(HERE, "pool.yaml"), "w", encoding="utf-8") as f:
