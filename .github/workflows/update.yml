@@ -13,7 +13,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,16 +28,13 @@ jobs:
           curl -sL "$URL" | gunzip > mihomo
           chmod +x mihomo
           ./mihomo -v
-      - name: 抓取并测速
-        env:
-          TG_TOKEN: ${{ secrets.TG_TOKEN }}
-          TG_CHAT: ${{ secrets.TG_CHAT }}
+      - name: 抓取并生成候选池
         run: python collect.py
       - name: 提交结果
         run: |
           git config user.name "bot"
           git config user.email "bot@users.noreply.github.com"
-          for f in free.yaml report.md history.json; do [ -f "$f" ] && git add "$f"; done
-          git diff --cached --quiet || git commit -m "update $(date -u +%F-%H%M)"
+          for f in pool.yaml report.md; do [ -f "$f" ] && git add "$f"; done
+          git diff --cached --quiet || git commit -m "pool $(date -u +%F-%H%M)"
           git pull --rebase --autostash -q || true
           git push
