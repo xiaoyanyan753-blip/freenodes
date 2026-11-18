@@ -41,7 +41,7 @@ KEEP = int(os.getenv("KEEP", "30"))
 EXTRA_CAP = int(os.getenv("EXTRA_CAP", "6"))      # 凑满 KEEP 时，每个国家在配额之外最多再多留几个
 LAT_MAX = int(os.getenv("LAT_MAX", "2500"))       # 毫秒，三次 HTTPS 请求的平均耗时上限
 THREADS = int(os.getenv("THREADS", "8"))
-MIN_SPEED = float(os.getenv("MIN_SPEED", "0.5"))  # MB/s（0.3≈2.4Mbps，聊天类 AI 够用；想更严就调高）
+MIN_SPEED = float(os.getenv("MIN_SPEED", "0.3"))  # MB/s（0.3≈2.4Mbps，聊天类 AI 够用；想更严就调高）
 SPEED_CAP, SPEED_TTL, SPEED_PER_CC = 20.0, 6 * 3600, 10
 MAX_NODES = int(os.getenv("MAX_NODES", "2400"))
 BATCH = int(os.getenv("BATCH", "400"))            # 每批同时开多少个节点（内存友好）
@@ -136,7 +136,13 @@ def fetch_local():
             if px:
                 cmd[1:1] = ["-x", px]
             try:
-                got = collect.from_text(sh(cmd).stdout)
+                txt = sh(cmd).stdout
+                got = collect.from_text(txt)
+                if not got:
+                    d = yaml.safe_load(txt)
+                    if isinstance(d, dict) and isinstance(d.get("proxies"), list):
+                        got = [(p, True) for p in d["proxies"] if isinstance(p, dict) and p.get("server")
+                               and p.get("port") and p.get("type")]
             except Exception:
                 got = []
             if got:
@@ -249,8 +255,8 @@ def probe(it):
     if lat > LAT_MAX:
         return dict(ok=False, why="延迟过高")
     cc = loc or it["cc0"]
-    if cc not in NAME:
-        return dict(ok=False, why="出口国家不在名单(%s)" % cc)
+    if not re.fullmatch(r"[A-Z]{2}", str(cc)) or cc == "XX":
+        return dict(ok=False, why="无法确定出口国家")
     if cur(port, "https://www.youtube.com/generate_204")[0] != "204":
         return dict(ok=False, why="YouTube不通")
     if cur(port, "https://api.github.com")[0] != "200":
@@ -270,13 +276,23 @@ def probe(it):
     return dict(ok=True, cc=cc, lat=lat, ai=ai)
 
 
+SPEED_URLS = ["https://speed.cloudflare.com/__down?bytes=20000000", "http://cachefly.cachefly.net/50mb.test"]
+
+
 def speed(port):
-    try:
-        r = sh(["curl", "-s", "-o", "/dev/null", "-w", "%{speed_download}", "-m", "8", "-x",
-                "http://127.0.0.1:%d" % port, "https://speed.cloudflare.com/__down?bytes=20000000"], t=15)
-        return float(r.stdout or 0) / 1048576
-    except Exception:
-        return 0.0
+    best = 0.0
+    for u in SPEED_URLS:
+        try:
+            r = sh(["curl", "-s", "-o", "/dev/null", "-w", "%{http_code} %{speed_download}", "-m", "8", "-x",
+                    "http://127.0.0.1:%d" % port, u], t=15)
+            code, spd = r.stdout.split()[:2]
+            if code == "200":
+                best = max(best, float(spd) / 1048576)
+                if best >= MIN_SPEED:
+                    break
+        except Exception:
+            pass
+    return best
 
 
 # ---------------- 挑选与输出 ----------------
@@ -381,6 +397,28 @@ def notify(text):
 
 
 # ---------------- 主流程 ----------------
+def mask(t):
+    t = re.sub(r"\d+\.\d+\.\d+\.\d+(:\d+)?", "x", t)
+    return re.sub(r"[\w.-]+:\d+", "H", t)[:80]
+
+
+def private_reasons(bad):
+    """私有来源节点初筛失败时，从内核日志里提取真实原因（已打码，不含域名和IP）。"""
+    why = Counter()
+    try:
+        lines = open(WORK + "/log.txt", errors="ignore").read().splitlines()
+    except OSError:
+        lines = []
+    last = {}
+    for ln in lines:
+        m = re.search(r"dial n(\d+) .*? error: (.*)$", ln)
+        if m:
+            last[int(m.group(1))] = m.group(2).rstrip('"')
+    for it in bad:
+        why[mask(last.get(it["i"], "内核日志里没有记录（可能被对方当网页应答或协议不支持）"))] += 1
+    return why
+
+
 def prefilter(it):
     """严格的初筛：必须真的拿到 204（只返回一个网页的假节点会被挡掉）。"""
     return cur(P0 + it["i"], "http://www.gstatic.com/generate_204", 5)[0] == "204"
@@ -400,6 +438,12 @@ def run():
     now = int(time.time())
     seen, items = set(), []
     local = fetch_local()
+    priv_k = set()
+    for p in local:
+        try:
+            priv_k.add(key(dict(p, port=int(p["port"]))))
+        except Exception:
+            pass
     for p in st.get("last", []) + local + fetch_pool():   # 上次入选的、私有订阅的先放前面
         try:
             p = dict(p)
@@ -411,12 +455,14 @@ def run():
             continue
         seen.add(k)
         cc0 = (str(p.get("name", "")).split("-")[0] or "XX").upper()
-        items.append({"p": p, "h": hkey(p), "cc0": cc0, "i": 0})
+        items.append({"p": p, "h": hkey(p), "cc0": cc0, "i": 0, "src": "private" if k in priv_k else "pool"})
     items = items[:MAX_NODES]
     log("本轮实测 %d 个节点，每批 %d 个" % (len(items), BATCH))
     spd = st.setdefault("speed", {})
     drops, oks, tested, lows = Counter(), [], [], []
     n_pre = n_good = 0
+    S = {k: Counter() for k in ("n", "pre", "good", "ok")}
+    priv_why = Counter()
     for b in range(0, len(items), BATCH):
         batch = items[b:b + BATCH]
         proc, batch = start_core(batch)
@@ -428,6 +474,14 @@ def run():
             with ThreadPoolExecutor(PRE_THREADS) as ex:
                 pre = list(ex.map(prefilter, batch))
             alive = [it for it, ok in zip(batch, pre) if ok]
+            for it, ok in zip(batch, pre):
+                S["n"][it["src"]] += 1
+                S["pre"][it["src"]] += 1 if ok else 0
+            bad_priv = [it for it, ok in zip(batch, pre) if not ok and it["src"] == "private"]
+            if bad_priv:
+                with ThreadPoolExecutor(8) as ex:
+                    list(ex.map(lambda x: cur(P0 + x["i"], "http://www.gstatic.com/generate_204", 8), bad_priv))
+                priv_why.update(private_reasons(bad_priv))
             drops["基础不通"] += len(batch) - len(alive)
             n_pre += len(alive)
             with ThreadPoolExecutor(THREADS) as ex:
@@ -440,6 +494,8 @@ def run():
                 else:
                     drops[r["why"]] += 1
             n_good += len(good)
+            for it in good:
+                S["good"][it["src"]] += 1
             good.sort(key=lambda x: x["lat"])
             drops["超出测速名额"] += max(0, len(good) - SPEED_PER_BATCH)
             for it in good[:SPEED_PER_BATCH]:
@@ -456,6 +512,7 @@ def run():
                     lows.append((it["cc"], it["lat"], sp, it["p"]["type"]))
                     continue
                 it["s"] = sp
+                S["ok"][it["src"]] += 1
                 oks.append(it)
             log("第 %d 批：%d 个 → 初筛通过 %d → 完整检测合格 %d；累计入围 %d" % (
                 b // BATCH + 1, len(batch), len(alive), len(good), len(oks)))
@@ -487,6 +544,14 @@ def run():
                  len(tested), n_pre, n_good, len(oks), len(final)),
              "淘汰原因：" + "，".join("%s %d" % kv for kv in drops.items()),
              "各国入选：" + "，".join("%s %d" % (NAME[c], cnt[c]) for c, _ in QUOTA)]
+    if S["n"]["private"]:
+        lines.append("私有来源节点 %d 个：初筛通过 %d → 完整合格 %d → 速度合格 %d" % (
+            S["n"]["private"], S["pre"]["private"], S["good"]["private"], S["ok"]["private"]))
+        if priv_why:
+            lines.append("私有节点初筛失败原因：" + "；".join("%s×%d" % kv for kv in priv_why.most_common(6)))
+    others = Counter(x["cc"] for x in final if x["cc"] not in NAME)
+    if others:
+        lines.append("其他国家入选：" + "，".join("%s %d" % kv for kv in others.items()))
     if gaps:
         lines.append("⚠️ 配额缺口：" + "，".join("%s 缺 %d" % (NAME[c], n) for c, n in gaps.items()))
     if lows:
@@ -504,7 +569,7 @@ def run():
     seq = Counter()
     for it in final:
         seq[it["cc"]] += 1
-        it["p"]["name"] = "免费-%s%02d-%.0fM-%dms-%s" % (it["cc"], seq[it["cc"]], it["s"], it["lat"],
+        it["p"]["name"] = "免费-%s%02d-%.1fM-%dms-%s" % (it["cc"], seq[it["cc"]], it["s"], it["lat"],
                                                         "AI" if it["ai"] else "非AI")
     lines += ["", "# 入选节点"] + ["%s  %.1f MB/s  %d ms  连续合格%d次  %s" % (
         it["p"]["name"], it["s"], it["lat"], it["n"], it["p"]["type"]) for it in final]
