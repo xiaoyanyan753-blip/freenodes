@@ -1,52 +1,44 @@
 # 更新报告
 
-北京时间: 2026-11-18 04:42
+北京时间: 2026-11-18 08:43
 
-候选 4000（上次入选 25）→ 延迟合格 310 → 进入测速 60 → 测速/连通合格 34 → 去重后保留 28
-淘汰原因：速度不足 26
+候选 4000（上次入选 28）→ 延迟合格 391 → 进入测速 60 → 测速/连通合格 33 → 去重后保留 20
+淘汰原因：速度不足 27
 
 ## 来源
-- peasoft/NoMoreWalls：解析 382，新增 362 
-- mahdibland/V2RayAggregator：解析 4388，新增 4035 
-- barry-far/V2ray-Config：解析 8185，新增 3153 
-- Pawdroid/Free-servers：解析 11，新增 1 
-- ermaozi/get_subscribe：解析 469，新增 88 
+- peasoft/NoMoreWalls：解析 382，新增 359 
+- mahdibland/V2RayAggregator：解析 4302，新增 3964 
+- barry-far/V2ray-Config：解析 8018，新增 3188 
+- Pawdroid/Free-servers：解析 14，新增 4 
+- ermaozi/get_subscribe：解析 461，新增 51 
 - Epodonios/v2ray-configs：解析 0，新增 0 ❌HTTP Error 404: Not Found
-- chengaopan/AutoMergePublicNodes：解析 398，新增 0 
+- chengaopan/AutoMergePublicNodes：解析 398，新增 13 
 - ripaojiedian/freenode：解析 12，新增 0 
-- MatinGhanbari/v2ray-configs：解析 3822，新增 1466 
+- MatinGhanbari/v2ray-configs：解析 3836，新增 1522 
 
 ## 入选节点
 
 | # | 国家 | 速度MB/s | 延迟ms | 连续合格 | 标记 | 协议 |
 |---|---|---|---|---|---|---|
-| 1 | US | 64.0 | 14 | 2 | GTA | trojan |
-| 2 | US | 32.3 | 38 | 2 | GTA | vless |
-| 3 | US | 35.3 | 41 | 2 | GTA | vmess |
-| 4 | US | 34.3 | 41 | 2 | GTA | vmess |
-| 5 | US | 48.6 | 12 | 2 | GTA | ss |
-| 6 | US | 28.7 | 24 | 2 | GTA | ss |
-| 7 | US | 58.1 | 11 | 1 | GTA | vless |
-| 8 | US | 50.0 | 34 | 1 | GTA | ss |
-| 9 | US | 32.3 | 61 | 1 | GT | ss |
-| 10 | US | 27.8 | 60 | 1 | GTA | vless |
-| 11 | US | 26.7 | 48 | 1 | GTA | ss |
-| 12 | CA | 22.8 | 57 | 2 | GTA | ss |
-| 13 | NL | 15.6 | 116 | 1 | GTA | hysteria2 |
-| 14 | XX | 15.0 | 45 | 1 | GTA | vmess |
-| 15 | NL | 13.2 | 123 | 2 | GTA | hysteria2 |
-| 16 | DE | 13.9 | 119 | 1 | GTA | hysteria2 |
-| 17 | RU | 11.8 | 114 | 2 | GTA | vless |
-| 18 | HK | 9.7 | 61 | 1 | GT | vmess |
-| 19 | NL | 11.4 | 114 | 2 | GTA | vless |
-| 20 | NL | 10.7 | 127 | 2 | GTA | ss |
-| 21 | FR | 10.6 | 112 | 2 | GTA | vless |
-| 22 | GB | 9.0 | 131 | 2 | GTA | hysteria2 |
-| 23 | CA | 8.4 | 48 | 2 | GTA | ss |
-| 24 | DE | 8.4 | 116 | 2 | GTA | hysteria2 |
-| 25 | CA | 7.3 | 50 | 2 | GTA | ss |
-| 26 | US | 6.8 | 51 | 2 | GTA | ss |
-| 27 | GB | 3.3 | 124 | 2 | GTA | ss |
-| 28 | XX | 3.5 | 43 | 1 | GTA | vmess |
+| 1 | US | 40.1 | 40 | 3 | GTA | vless |
+| 2 | US | 34.8 | 44 | 3 | GTA | ss |
+| 3 | US | 32.7 | 51 | 3 | GTA | trojan |
+| 4 | US | 29.2 | 60 | 3 | GTA | ss |
+| 5 | US | 48.5 | 39 | 2 | GTA | ss |
+| 6 | US | 27.1 | 59 | 3 | GTA | vmess |
+| 7 | US | 26.6 | 60 | 3 | GTA | vmess |
+| 8 | US | 28.5 | 50 | 2 | GTA | ss |
+| 9 | US | 21.7 | 65 | 2 | GTA | ss |
+| 10 | US | 19.9 | 65 | 3 | GTA | vless |
+| 11 | CA | 18.8 | 84 | 3 | GTA | ss |
+| 12 | US | 19.9 | 70 | 1 | GTA | vless |
+| 13 | US | 19.0 | 12 | 1 | GTA | vless |
+| 14 | DE | 14.0 | 148 | 2 | GTA | hysteria2 |
+| 15 | DE | 12.7 | 155 | 3 | GTA | hysteria2 |
+| 16 | NL | 10.1 | 144 | 3 | GTA | hysteria2 |
+| 17 | FR | 9.9 | 150 | 3 | GTA | vless |
+| 18 | CA | 7.8 | 67 | 3 | GTA | ss |
+| 19 | GB | 6.9 | 156 | 3 | GTA | ss |
+| 20 | CA | 6.5 | 69 | 3 | GTA | ss |
 
 标记：G=Google可达 T=Telegram可达 A=OpenAI接口可达。连续合格=已连续多少次更新都存活。
