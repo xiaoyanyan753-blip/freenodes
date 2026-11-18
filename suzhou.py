@@ -64,12 +64,18 @@ def log(*a):
 
 
 # ---------------- 通用 ----------------
+def srv(p):
+    return str(p.get("server") or p.get("name") or "")
+
+
 def cred(p):
-    return str(p.get("uuid") or p.get("password") or "")
+    return str(p.get("uuid") or p.get("password") or p.get("private-key") or p.get("name") or "")
 
 
 def key(p):
-    return (p["type"], str(p["server"]).lower(), int(p["port"]), cred(p))
+    rest = hashlib.sha1(json.dumps({k: v for k, v in p.items() if k != "name"}, sort_keys=True,
+                                   default=str).encode()).hexdigest()[:10]
+    return (str(p.get("type")), srv(p).lower(), int(p.get("port") or 0), str(p.get("uuid") or p.get("password") or rest))
 
 
 def hkey(p):
@@ -114,43 +120,61 @@ def fetch_pool():
     raise SystemExit("拉不到候选池 pool.yaml：先确认 GitHub 那边已经成功运行过一次")
 
 
+SKIP_TYPES = {"direct", "dns", "reject", "reject-drop", "pass", "compatible"}
+
+
 def fetch_local():
     """读取 U 盘上的私有订阅清单 my_sources.txt（只在路由器本地，不进 GitHub）。"""
     f = BASE + "/my_sources.txt"
-    out = []
+    out, labels = [], {}
     if not os.path.exists(f):
-        return out
+        return out, labels
     sys.path.insert(0, BASE)
     try:
         import collect
     except Exception as e:
         log("读取私有订阅需要同目录的 collect.py（%s）" % e)
-        return out
-    for line in open(f, encoding="utf-8-sig").read().splitlines():
+        return out, labels
+    for lineno, line in enumerate(open(f, encoding="utf-8-sig").read().splitlines(), 1):
         u = line.strip()
         if not u or u.startswith("#"):
             continue
-        got = []
+        host = u.split("/")[2] if u.count("/") > 2 else "?"
+        got, info = [], []
         for px in (None, CLASH_PROXY):
             cmd = ["curl", "-sSL", "-m", "40", "-A", "clash.meta", u]
             if px:
                 cmd[1:1] = ["-x", px]
             try:
-                txt = sh(cmd).stdout
+                raw = subprocess.run(cmd, capture_output=True, timeout=60).stdout
+                txt = raw.decode("utf-8", "replace")
+                info = ["%d 字节" % len(raw)]
                 got = collect.from_text(txt)
                 if not got:
-                    d = yaml.safe_load(txt)
-                    if isinstance(d, dict) and isinstance(d.get("proxies"), list):
-                        got = [(p, True) for p in d["proxies"] if isinstance(p, dict) and p.get("server")
-                               and p.get("port") and p.get("type")]
-            except Exception:
+                    try:
+                        d = yaml.safe_load(txt)
+                        lst = d.get("proxies") if isinstance(d, dict) else None
+                        info.append("yaml解析成功" + ("，proxies %d 个" % len(lst) if isinstance(lst, list) else "，没有proxies列表"))
+                        if isinstance(lst, list):
+                            info.append("协议：" + "、".join("%s×%d" % kv for kv in Counter(
+                                str(p.get("type")) for p in lst if isinstance(p, dict)).most_common(6)))
+                            got = [(p, True) for p in lst if isinstance(p, dict) and p.get("type")
+                                   and p.get("type") not in SKIP_TYPES]
+                    except Exception as e:
+                        mk = getattr(e, "problem_mark", None)
+                        info.append("yaml解析失败：%s %s%s" % (e.__class__.__name__, str(getattr(e, "problem", ""))[:40],
+                                                            "（第%d行）" % (mk.line + 1) if mk else ""))
+            except Exception as e:
+                info = ["下载失败：%s" % e.__class__.__name__]
                 got = []
             if got:
                 break
-        host = u.split("/")[2] if u.count("/") > 2 else "?"
-        log("私有来源 %s：%d 个节点" % (host, len(got)))
-        out += [dict(p, name="MY-%d" % len(out)) for p, _ in got]
-    return out
+        log("私有来源 %s：%d 个节点（%s）" % (host, len(got), "；".join(info)))
+        for p, _ in got:
+            nm = "MY-%d" % len(out)
+            out.append(dict(p, name=nm))
+            labels[nm] = "第%d行 %s" % (lineno, host)
+    return out, labels
 
 
 # ---------------- 内核：每个候选节点一个独立监听端口，可并行实测 ----------------
@@ -301,7 +325,7 @@ def pick(cands, n, cnt):
     for it in cands:
         if len(out) >= n:
             break
-        kc, kn = ("c", cred(it["p"])), ("n", netkey(it["p"]["server"]))
+        kc, kn = ("c", cred(it["p"])), ("n", netkey(srv(it["p"])))
         if cnt[kc] >= 2 or cnt[kn] >= 2:
             continue
         cnt[kc] += 1
@@ -437,17 +461,21 @@ def run():
     st = load_state()
     now = int(time.time())
     seen, items = set(), []
-    local = fetch_local()
+    local, labels = fetch_local()
     priv_k = set()
     for p in local:
         try:
-            priv_k.add(key(dict(p, port=int(p["port"]))))
+            q = dict(p)
+            if q.get("port") is not None:
+                q["port"] = int(q["port"])
+            priv_k.add(key(q))
         except Exception:
             pass
     for p in st.get("last", []) + local + fetch_pool():   # 上次入选的、私有订阅的先放前面
         try:
             p = dict(p)
-            p["port"] = int(p["port"])
+            if p.get("port") is not None:
+                p["port"] = int(p["port"])
             k = key(p)
         except Exception:
             continue
@@ -455,13 +483,15 @@ def run():
             continue
         seen.add(k)
         cc0 = (str(p.get("name", "")).split("-")[0] or "XX").upper()
-        items.append({"p": p, "h": hkey(p), "cc0": cc0, "i": 0, "src": "private" if k in priv_k else "pool"})
+        items.append({"p": p, "h": hkey(p), "cc0": cc0, "i": 0, "src": "private" if k in priv_k else "pool",
+                      "label": labels.get(p.get("name"), "上次入选") if k in priv_k else "候选池"})
     items = items[:MAX_NODES]
     log("本轮实测 %d 个节点，每批 %d 个" % (len(items), BATCH))
     spd = st.setdefault("speed", {})
     drops, oks, tested, lows = Counter(), [], [], []
     n_pre = n_good = 0
     S = {k: Counter() for k in ("n", "pre", "good", "ok")}
+    L = {k: Counter() for k in ("n", "pre", "good", "ok")}      # 按来源（第几行）统计
     priv_why = Counter()
     for b in range(0, len(items), BATCH):
         batch = items[b:b + BATCH]
@@ -477,6 +507,8 @@ def run():
             for it, ok in zip(batch, pre):
                 S["n"][it["src"]] += 1
                 S["pre"][it["src"]] += 1 if ok else 0
+                L["n"][it["label"]] += 1
+                L["pre"][it["label"]] += 1 if ok else 0
             bad_priv = [it for it, ok in zip(batch, pre) if not ok and it["src"] == "private"]
             if bad_priv:
                 with ThreadPoolExecutor(8) as ex:
@@ -496,6 +528,7 @@ def run():
             n_good += len(good)
             for it in good:
                 S["good"][it["src"]] += 1
+                L["good"][it["label"]] += 1
             good.sort(key=lambda x: x["lat"])
             drops["超出测速名额"] += max(0, len(good) - SPEED_PER_BATCH)
             for it in good[:SPEED_PER_BATCH]:
@@ -513,6 +546,7 @@ def run():
                     continue
                 it["s"] = sp
                 S["ok"][it["src"]] += 1
+                L["ok"][it["label"]] += 1
                 oks.append(it)
             log("第 %d 批：%d 个 → 初筛通过 %d → 完整检测合格 %d；累计入围 %d" % (
                 b // BATCH + 1, len(batch), len(alive), len(good), len(oks)))
@@ -547,6 +581,9 @@ def run():
     if S["n"]["private"]:
         lines.append("私有来源节点 %d 个：初筛通过 %d → 完整合格 %d → 速度合格 %d" % (
             S["n"]["private"], S["pre"]["private"], S["good"]["private"], S["ok"]["private"]))
+        for lb in sorted(L["n"]):
+            lines.append("  · %s：%d 个 → 初筛 %d → 完整 %d → 速度 %d" % (
+                lb, L["n"][lb], L["pre"][lb], L["good"][lb], L["ok"][lb]))
         if priv_why:
             lines.append("私有节点初筛失败原因：" + "；".join("%s×%d" % kv for kv in priv_why.most_common(6)))
     others = Counter(x["cc"] for x in final if x["cc"] not in NAME)
@@ -581,6 +618,7 @@ def run():
     st["last"] = [dict(x["p"], name=x["cc"] + "-last") for x in final]
     json.dump(st, open(STATE, "w"))
     log("完成：入选 %d 个，用时 %d 秒" % (len(final), time.time() - t0))
+    print("\n" + "\n".join(lines))
     notify("✅ 苏州线路实测完成（北京 %s）\n入选 %d 个：%s\n最快 %.1f MB/s%s" % (
         bj, len(final), " ".join("%s%d" % (NAME[c], cnt[c]) for c, _ in QUOTA if cnt[c]),
         max(x["s"] for x in final), ("\n⚠️ 缺口：" + "，".join("%s缺%d" % (NAME[c], n) for c, n in gaps.items()))
